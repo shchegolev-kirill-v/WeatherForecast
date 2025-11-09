@@ -1,9 +1,8 @@
-package org.kshchegolev.weatherforecast.domain.usecases
+package org.kshchegolev.weatherforecast.data
 
 import org.kshchegolev.weatherforecast.domain.Result
 import org.kshchegolev.weatherforecast.network.models.ForecastResponse
 
-interface GetForecastUseCase {
+interface ForecastRepository {
     suspend fun getForecast(): Result<ForecastResponse>
 }
-

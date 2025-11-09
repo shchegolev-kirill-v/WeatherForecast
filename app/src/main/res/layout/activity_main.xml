@@ -21,8 +21,8 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="@string/app_name"
-            app:layout_scrollFlags="scroll|enterAlways|snap" />
+            app:layout_scrollFlags="scroll|enterAlways|snap"
+            app:title="@string/app_name" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -37,61 +37,76 @@
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            >
+            android:layout_height="match_parent">
 
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="16dp"
+                android:clipChildren="false"
+                android:clipToPadding="false"
                 >
+
                 <LinearLayout
                     android:id="@+id/content_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:visibility="visible"
-                    >
+                    android:visibility="visible">
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:elevation="10dp"
-                        >
-                        <TextView
-                            android:layout_width="wrap_content"
+                        app:cardElevation="10dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="29"
-                            />
+                            android:orientation="vertical"
+                            >
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="29" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="updated at ..." />
+                        </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
+
                     <Space
                         android:layout_width="0dp"
-                        android:layout_height="12dp"/>
+                        android:layout_height="12dp" />
+
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/hourly_card"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
-                        android:elevation="10dp"
-                        >
-                       <androidx.recyclerview.widget.RecyclerView
-                           android:id="@+id/hourly_recycleView"
-                           android:layout_width="match_parent"
-                           android:layout_height="wrap_content"/>
+                        android:elevation="10dp">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/hourly_recycleView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
 
                     </com.google.android.material.card.MaterialCardView>
+
                     <Space
                         android:layout_width="0dp"
-                        android:layout_height="12dp"/>
+                        android:layout_height="12dp" />
+
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="400dp"
-                        android:elevation="10dp"
-                        >
-                        <TextView
+                        android:elevation="10dp">
+
+                        <com.google.android.material.textview.MaterialTextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Next days"
-                            />
+                            android:text="Next days" />
                     </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
 
@@ -100,14 +115,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:visibility="gone"
-                    >
+                    android:visibility="gone">
 
                     <com.google.android.material.progressindicator.CircularProgressIndicator
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:indeterminate="true"
-                        />
+                        android:indeterminate="true" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -117,12 +130,12 @@
                     android:orientation="vertical"
                     android:visibility="gone">
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Something went wrong :(" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Load" />

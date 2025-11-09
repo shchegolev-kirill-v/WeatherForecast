@@ -1,12 +1,19 @@
 package org.kshchegolev.weatherforecast.presentation
 
 import android.os.Bundle
+import android.view.View
+import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.presentation.HourlyForecastAdapter
 import org.kshchegolev.weatherforecast.R
 import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
@@ -14,6 +21,8 @@ import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
 class MainActivity : AppCompatActivity() {
 
     private lateinit var hourlyForecastAdapter: HourlyForecastAdapter
+
+    private val viewModel by viewModels<ForecastViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +35,35 @@ class MainActivity : AppCompatActivity() {
         }
 
         initializeRecyclerView()
+
+        val loadingLayout = findViewById<LinearLayout>(R.id.loading_layout)
+        val errorLayout = findViewById<LinearLayout>(R.id.error_layout)
+        val contentLayout = findViewById<LinearLayout>(R.id.content_layout)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect {
+                    when {
+                        it.isLoading && it.items.isEmpty() -> {
+                            loadingLayout.visibility = View.VISIBLE
+                            errorLayout.visibility = View.GONE
+                            contentLayout.visibility = View.GONE
+                        }
+                        !it.isLoading -> {
+                            loadingLayout.visibility = View.GONE
+                            errorLayout.visibility = View.GONE
+                            contentLayout.visibility = View.VISIBLE
+                        }
+                    }
+
+
+                    hourlyForecastAdapter.submitList(it.items)
+                }
+            }
+        }
+
+
+        viewModel.initialize()
     }
 
     private fun initializeRecyclerView() {
@@ -35,14 +73,5 @@ class MainActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = hourlyForecastAdapter
         }
-        hourlyForecastAdapter.submitList(
-            List(20) {
-                HourlyForecast(
-                    hour = "$it",
-                    temp = "29",
-                    timestamp = it.toLong(),
-                )
-            }
-        )
     }
 }
