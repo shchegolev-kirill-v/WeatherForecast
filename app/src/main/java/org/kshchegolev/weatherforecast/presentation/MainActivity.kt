@@ -2,6 +2,7 @@ package org.kshchegolev.weatherforecast.presentation
 
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -13,6 +14,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil3.load
+import com.google.android.material.textview.MaterialTextView
 import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.presentation.HourlyForecastAdapter
 import org.kshchegolev.weatherforecast.R
@@ -39,6 +42,15 @@ class MainActivity : AppCompatActivity() {
         val loadingLayout = findViewById<LinearLayout>(R.id.loading_layout)
         val errorLayout = findViewById<LinearLayout>(R.id.error_layout)
         val contentLayout = findViewById<LinearLayout>(R.id.content_layout)
+
+
+        val currentTempTextView = findViewById<MaterialTextView>(R.id.current_temp_textview)
+        val weatherIconImageView = findViewById<ImageView>(R.id.weather_icon_imageview)
+        val updatedAtTextView = findViewById<MaterialTextView>(R.id.updated_at_textview)
+        currentTempTextView.text = "29°"
+        weatherIconImageView.load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
+        updatedAtTextView.text = getString(R.string.updated_at, "12:00")
+
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

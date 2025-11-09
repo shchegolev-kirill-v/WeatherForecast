@@ -22,6 +22,7 @@ class ForecastViewModel(
     private val uiStateMutable = MutableStateFlow(UiState.EMPTY)
     val uiState = uiStateMutable.asStateFlow()
 
+
     fun initialize() {
         if (!initialized) {
             loadData()
@@ -52,7 +53,7 @@ class ForecastViewModel(
                             isRefreshing = false,
                             items = result.data.forecast.forecastDays[0].hour.map {
                                 HourlyForecast(
-                                    hour = "${it.time} = ${convertEpochToLocalTime(it.timestamp)}",
+                                    hour = convertEpochToLocalTime(it.timestamp),
                                     temp = it.temp.toString(),
                                     timestamp = it.timestamp,
                                 )

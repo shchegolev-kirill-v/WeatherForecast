@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">WeatherForecast</string>
+    <string name="updated_at">Обновлено в %1$s</string>
+    <string name="error_msg">Что-то пошло не так :(</string>
+    <string name="reload_btn">Повторить</string>
+
 </resources>
