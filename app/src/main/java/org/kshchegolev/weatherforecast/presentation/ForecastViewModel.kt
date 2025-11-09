@@ -2,6 +2,7 @@ package org.kshchegolev.weatherforecast.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -9,13 +10,14 @@ import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.domain.Result
 import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
 import org.kshchegolev.weatherforecast.domain.usecases.GetForecastUseCase
-import org.kshchegolev.weatherforecast.domain.usecases.GetForecastUseCaseImpl
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
-class ForecastViewModel(
-    private val forecastUseCase: GetForecastUseCase = GetForecastUseCaseImpl()
+@HiltViewModel
+class ForecastViewModel @Inject constructor(
+    private val forecastUseCase: GetForecastUseCase
 ) : ViewModel() {
 
     private val initialized = false

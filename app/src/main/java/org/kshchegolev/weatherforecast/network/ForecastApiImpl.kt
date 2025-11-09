@@ -4,12 +4,10 @@ import kotlinx.coroutines.CancellationException
 import org.kshchegolev.weatherforecast.domain.Result
 import org.kshchegolev.weatherforecast.network.models.ForecastResponse
 import org.kshchegolev.weatherforecast.network.retrofit.RetrofitForecastApi
-import org.kshchegolev.weatherforecast.network.retrofit.RetrofitInstance
+import javax.inject.Inject
 
-class ForecastApiImpl(
-    private val retrofitForecastApi: RetrofitForecastApi = RetrofitInstance().createApi(
-        RetrofitForecastApi::class.java
-    )
+class ForecastApiImpl @Inject constructor(
+    private val retrofitForecastApi: RetrofitForecastApi
 ) : ForecastApi {
     override suspend fun getForecast(): Result<ForecastResponse> {
         return try {
@@ -19,10 +17,5 @@ class ForecastApiImpl(
         } catch (e: Exception) {
             Result.Failure("Failed to get forecast: ${e.message}")
         }
-
     }
-}
-
-interface ForecastApi {
-    suspend fun getForecast(): Result<ForecastResponse>
 }

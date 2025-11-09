@@ -16,11 +16,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil3.load
 import com.google.android.material.textview.MaterialTextView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.presentation.HourlyForecastAdapter
 import org.kshchegolev.weatherforecast.R
 import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var hourlyForecastAdapter: HourlyForecastAdapter
