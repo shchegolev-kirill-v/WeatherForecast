@@ -1,7 +1,9 @@
 package org.kshchegolev.weatherforecast.presentation
 
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
@@ -9,18 +11,37 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.setPadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil3.load
+import com.google.android.material.R.style
 import com.google.android.material.textview.MaterialTextView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import org.kshchegolev.weatherforecast.presentation.HourlyForecastAdapter
 import org.kshchegolev.weatherforecast.R
-import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
+import org.kshchegolev.weatherforecast.presentation.views.dsl.appBarLayout
+import org.kshchegolev.weatherforecast.presentation.views.dsl.cardView
+import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
+import org.kshchegolev.weatherforecast.presentation.views.dsl.frameLayout
+import org.kshchegolev.weatherforecast.presentation.views.dsl.horizontalLayout
+import org.kshchegolev.weatherforecast.presentation.views.dsl.imageView
+import org.kshchegolev.weatherforecast.presentation.views.dsl.matchParentHeight
+import org.kshchegolev.weatherforecast.presentation.views.dsl.matchParentWidth
+import org.kshchegolev.weatherforecast.presentation.views.dsl.scrollView
+import org.kshchegolev.weatherforecast.presentation.views.dsl.setContent
+import org.kshchegolev.weatherforecast.presentation.views.dsl.size
+import org.kshchegolev.weatherforecast.presentation.views.dsl.space
+import org.kshchegolev.weatherforecast.presentation.views.dsl.swipeRefreshLayout
+import org.kshchegolev.weatherforecast.presentation.views.dsl.textView
+import org.kshchegolev.weatherforecast.presentation.views.dsl.toolbar
+import org.kshchegolev.weatherforecast.presentation.views.dsl.verticalLayout
+import org.kshchegolev.weatherforecast.presentation.views.dsl.weight
+import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentHeight
+import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentWidth
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -32,6 +53,45 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+
+        setContent {
+            appBarLayout {
+                matchParentWidth()
+                wrapContentHeight()
+                toolbar {
+                    wrapContentHeight()
+                    title = "TITLE"
+                }
+            }
+            swipeRefreshLayout {
+                matchParentWidth()
+                matchParentHeight()
+                setColorSchemeColors(getColor(R.color.md_theme_primary))
+                scrollView {
+                    matchParentWidth()
+                    matchParentHeight()
+                    clipChildren = false
+                    clipToPadding = false
+                    frameLayout {
+                        matchParentWidth()
+                        wrapContentHeight()
+                        setPadding(16.dp)
+                        clipChildren = false
+                        clipToPadding = false
+                        verticalLayout {
+                            currentWeather()
+                            space { size(0.dp, 24.dp) }
+                            dailyWeather()
+                        }
+                    }
+                }
+            }
+        }
+
+        viewModel.initialize()
+        return
+
         setContentView(R.layout.activity_main)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -45,14 +105,12 @@ class MainActivity : AppCompatActivity() {
         val errorLayout = findViewById<LinearLayout>(R.id.error_layout)
         val contentLayout = findViewById<LinearLayout>(R.id.content_layout)
 
-
         val currentTempTextView = findViewById<MaterialTextView>(R.id.current_temp_textview)
         val weatherIconImageView = findViewById<ImageView>(R.id.weather_icon_imageview)
         val updatedAtTextView = findViewById<MaterialTextView>(R.id.updated_at_textview)
         currentTempTextView.text = "29°"
         weatherIconImageView.load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
         updatedAtTextView.text = getString(R.string.updated_at, "12:00")
-
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -63,22 +121,94 @@ class MainActivity : AppCompatActivity() {
                             errorLayout.visibility = View.GONE
                             contentLayout.visibility = View.GONE
                         }
+
                         !it.isLoading -> {
                             loadingLayout.visibility = View.GONE
                             errorLayout.visibility = View.GONE
                             contentLayout.visibility = View.VISIBLE
                         }
                     }
-
-
                     hourlyForecastAdapter.submitList(it.items)
                 }
             }
         }
 
-
-        viewModel.initialize()
     }
+
+    private fun ViewGroup.currentWeather() =
+        cardView {
+            cardElevation = 8f.dp
+            setContentPadding(24.dp, 24.dp, 24.dp, 24.dp)
+            horizontalLayout {
+                textView {
+                    wrapContentWidth()
+                    wrapContentHeight()
+                    text = "29°"
+                    setTextAppearance(style.TextAppearance_Material3_DisplayLarge)
+                    setTextColor(getColor(R.color.md_theme_primary))
+                }
+                imageView {
+                    size(64.dp, 64.dp)
+                    load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
+                }
+                textView {
+                    matchParentWidth()
+                    matchParentHeight()
+                    text = "updated at 12:00"
+                    textAlignment = View.TEXT_ALIGNMENT_TEXT_END
+                    setTextAppearance(style.TextAppearance_MaterialComponents_Caption)
+                    setTextColor(getColor(R.color.md_theme_secondary))
+                }
+            }
+        }
+
+
+    private fun ViewGroup.dailyWeather() =
+        cardView {
+            matchParentWidth()
+            wrapContentHeight()
+            cardElevation = 8f.dp
+            setContentPadding(24.dp, 24.dp, 24.dp, 24.dp)
+            verticalLayout {
+                matchParentWidth()
+                wrapContentHeight()
+                repeat(3) {
+                    horizontalLayout {
+                        matchParentWidth()
+                        wrapContentHeight()
+                        gravity = Gravity.CENTER_VERTICAL
+                        textView {
+                            weight(0.1f)
+                            wrapContentHeight()
+                            setTextAppearance(style.TextAppearance_Material3_BodyLarge)
+                            setTextColor(getColor(R.color.md_theme_primary))
+                            text = "Day"
+                        }
+                        imageView {
+                            size(48.dp, 48.dp)
+                            load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
+                        }
+                        textView {
+                            wrapContentWidth()
+                            wrapContentHeight()
+                            setTextAppearance(style.TextAppearance_Material3_BodyLarge_Emphasized)
+                            setTextColor(getColor(R.color.md_theme_primary))
+                            setPadding(12.dp, 0.dp, 0.dp, 0.dp)
+                            text = "33°"
+                        }
+                        textView {
+                            //weight(0.1f)
+                            wrapContentHeight()
+                            setTextAppearance(style.TextAppearance_Material3_BodyLarge)
+                            setTextColor(getColor(R.color.md_theme_secondary))
+                            setPadding(12.dp, 0.dp, 0.dp, 0.dp)
+                            text = "21°"
+                        }
+                    }
+                }
+            }
+        }
+
 
     private fun initializeRecyclerView() {
         val hourlyRecyclerView = findViewById<RecyclerView>(R.id.hourly_recycleView)

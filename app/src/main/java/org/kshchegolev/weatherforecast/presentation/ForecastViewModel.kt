@@ -1,5 +1,7 @@
 package org.kshchegolev.weatherforecast.presentation
 
+import android.view.View
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,6 +12,7 @@ import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.domain.Result
 import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
 import org.kshchegolev.weatherforecast.domain.usecases.GetForecastUseCase
+import org.kshchegolev.weatherforecast.presentation.views.dsl.TextState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -24,6 +27,7 @@ class ForecastViewModel @Inject constructor(
     private val uiStateMutable = MutableStateFlow(UiState.EMPTY)
     val uiState = uiStateMutable.asStateFlow()
 
+    val text = MutableLiveData(TextState("Empty", View.VISIBLE))
 
     fun initialize() {
         if (!initialized) {
@@ -49,6 +53,7 @@ class ForecastViewModel @Inject constructor(
                 }
 
                 is Result.Success -> {
+                    text.value = text.value?.copy(result.data.location.name)
                     uiStateMutable.update { it ->
                         it.copy(
                             isLoading = false,
