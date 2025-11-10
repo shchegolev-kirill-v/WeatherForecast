@@ -21,7 +21,7 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.textView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentHeight
 import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentWidth
 
-class HourlyForecastAdapter : ListAdapter<HourlyForecast, HourlyForecastVH>(HourlyForecastDiff) {
+internal class HourlyForecastAdapter : ListAdapter<HourlyForecast, HourlyForecastVH>(HourlyForecastDiff) {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -87,6 +87,5 @@ class HourlyForecastVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
             tempTextView.text = hourlyForecast.temp
         }
     }
-
 }
 

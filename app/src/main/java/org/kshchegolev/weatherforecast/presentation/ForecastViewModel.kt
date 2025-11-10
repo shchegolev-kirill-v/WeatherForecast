@@ -26,7 +26,7 @@ import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
-class ForecastViewModel @Inject constructor(
+internal class ForecastViewModel @Inject constructor(
     private val forecastUseCase: GetForecastUseCase
 ) : ViewModel() {
 
