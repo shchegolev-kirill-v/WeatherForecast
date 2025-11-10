@@ -9,18 +9,19 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.domain.Result
 import org.kshchegolev.weatherforecast.domain.models.CurrentWeather
 import org.kshchegolev.weatherforecast.domain.models.DailyForecast
 import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
 import org.kshchegolev.weatherforecast.domain.usecases.GetForecastUseCase
+import org.kshchegolev.weatherforecast.network.models.ForecastResponse
 import org.kshchegolev.weatherforecast.presentation.helpers.Formatters
 import org.kshchegolev.weatherforecast.presentation.helpers.Formatters.convertEpochToLocalTimeFormatted
 import org.kshchegolev.weatherforecast.presentation.helpers.Formatters.toCompleteUrl
 import org.kshchegolev.weatherforecast.presentation.helpers.Formatters.toTemperatureOrDefault
+import org.kshchegolev.weatherforecast.presentation.models.Panel
+import org.kshchegolev.weatherforecast.presentation.models.UiState
 import java.time.Instant
 import javax.inject.Inject
 
@@ -32,8 +33,6 @@ class ForecastViewModel @Inject constructor(
     private var initialized = false
 
     private var loadDataJob: Job? = null
-    private val uiStateMutable = MutableStateFlow(UiState.EMPTY)
-    val uiState = uiStateMutable.asStateFlow()
 
     private val stateMutable = MutableLiveData(UiState.EMPTY)
     val state: LiveData<UiState> = stateMutable
@@ -75,48 +74,10 @@ class ForecastViewModel @Inject constructor(
             val result = forecastUseCase.getForecast()
             when (result) {
                 is Result.Failure -> {
-                    val shouldShowErrorSnackBar = stateMutable.value?.run {
-                        dailyForecasts.isNotEmpty()
-                    } ?: false
-                    stateMutable.value = stateMutable.value?.copy(
-                        isLoading = false,
-                        isRefreshing = false,
-                        isError = true,
-                        shouldShowErrorSnackBar = shouldShowErrorSnackBar
-                    )
+                    handleErrorResult()
                 }
-
                 is Result.Success -> {
-                    stateMutable.value = stateMutable.value?.copy(
-                        isLoading = false,
-                        isRefreshing = false,
-                        isError = false,
-                        shouldShowErrorSnackBar = false,
-                        title = result.data.location.name,
-                        currentWeather = CurrentWeather(
-                            temp = result.data.current.temp.toTemperatureOrDefault(),
-                            iconUrl = result.data.current.condition.iconUrl.toCompleteUrl(),
-                            updatedAt = convertEpochToLocalTimeFormatted(Instant.now().epochSecond),
-                        ),
-                        hourlyForecasts = result.data.forecast.forecastDays[0].hour.map {
-                            HourlyForecast(
-                                hour = convertEpochToLocalTimeFormatted(it.timestamp),
-                                temp = it.temp.toTemperatureOrDefault(),
-                                iconUrl = it.condition.iconUrl.toCompleteUrl(),
-                                timestamp = it.timestamp,
-                            )
-                        },
-                        dailyForecasts = result.data.forecast.forecastDays.map {
-                            DailyForecast(
-                                day = Formatters.convertEpochToLocalDateFormatted(
-                                    it.timestamp
-                                ),
-                                tempMax = it.day.maxTemp.toTemperatureOrDefault(),
-                                tempMin = it.day.minTemp.toTemperatureOrDefault(),
-                                iconUrl = it.day.condition.iconUrl.toCompleteUrl()
-                            )
-                        }
-                    )
+                    handleSuccessResult(result.data)
                 }
             }
         }
@@ -125,6 +86,51 @@ class ForecastViewModel @Inject constructor(
     fun snackBarShown() {
         stateMutable.value = stateMutable.value?.copy(
             shouldShowErrorSnackBar = false
+        )
+    }
+
+    private fun handleSuccessResult(result: ForecastResponse) {
+        stateMutable.value = stateMutable.value?.copy(
+            isLoading = false,
+            isRefreshing = false,
+            isError = false,
+            shouldShowErrorSnackBar = false,
+            title = result.location.name,
+            currentWeather = CurrentWeather(
+                temp = result.current.temp.toTemperatureOrDefault(),
+                iconUrl = result.current.condition.iconUrl.toCompleteUrl(),
+                updatedAt = convertEpochToLocalTimeFormatted(Instant.now().epochSecond),
+            ),
+            hourlyForecasts = result.forecast.forecastDays[0].hour.map {
+                HourlyForecast(
+                    hour = convertEpochToLocalTimeFormatted(it.timestamp),
+                    temp = it.temp.toTemperatureOrDefault(),
+                    iconUrl = it.condition.iconUrl.toCompleteUrl(),
+                    timestamp = it.timestamp,
+                )
+            },
+            dailyForecasts = result.forecast.forecastDays.map {
+                DailyForecast(
+                    day = Formatters.convertEpochToLocalDateFormatted(
+                        it.timestamp
+                    ),
+                    tempMax = it.day.maxTemp.toTemperatureOrDefault(),
+                    tempMin = it.day.minTemp.toTemperatureOrDefault(),
+                    iconUrl = it.day.condition.iconUrl.toCompleteUrl()
+                )
+            }
+        )
+    }
+
+    private fun handleErrorResult() {
+        val shouldShowErrorSnackBar = stateMutable.value?.run {
+            dailyForecasts.isNotEmpty()
+        } ?: false
+        stateMutable.value = stateMutable.value?.copy(
+            isLoading = false,
+            isRefreshing = false,
+            isError = true,
+            shouldShowErrorSnackBar = shouldShowErrorSnackBar
         )
     }
 }
@@ -140,36 +146,3 @@ private fun UiState.getPanelToShow(): Panel {
 }
 
 
-data class UiState(
-    val isLoading: Boolean,
-    val isRefreshing: Boolean,
-    val isError: Boolean,
-    val shouldShowErrorSnackBar: Boolean,
-    val title: String,
-    val currentWeather: CurrentWeather,
-    val hourlyForecasts: List<HourlyForecast>,
-    val dailyForecasts: List<DailyForecast>
-) {
-
-    companion object {
-        val EMPTY =
-            UiState(
-                isLoading = false,
-                isRefreshing = false,
-                isError = false,
-                shouldShowErrorSnackBar = false,
-                title = "",
-                currentWeather = CurrentWeather(
-                    temp = "",
-                    iconUrl = "",
-                    updatedAt = ""
-                ),
-                hourlyForecasts = emptyList(),
-                dailyForecasts = emptyList()
-            )
-    }
-}
-
-enum class Panel {
-    Loading, Error, Content
-}
