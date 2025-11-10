@@ -1,18 +1,20 @@
 package org.kshchegolev.weatherforecast.presentation
 
-import android.view.View
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.distinctUntilChanged
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.domain.Result
+import org.kshchegolev.weatherforecast.domain.models.CurrentWeather
+import org.kshchegolev.weatherforecast.domain.models.DailyForecast
 import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
 import org.kshchegolev.weatherforecast.domain.usecases.GetForecastUseCase
-import org.kshchegolev.weatherforecast.presentation.views.dsl.TextState
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -27,7 +29,16 @@ class ForecastViewModel @Inject constructor(
     private val uiStateMutable = MutableStateFlow(UiState.EMPTY)
     val uiState = uiStateMutable.asStateFlow()
 
-    val text = MutableLiveData(TextState("Empty", View.VISIBLE))
+    private val stateMutable = MutableLiveData(UiState.EMPTY)
+    val state: LiveData<UiState> = stateMutable
+
+    val title: LiveData<String> = state.map { it.title }.distinctUntilChanged()
+    val currentWeather: LiveData<CurrentWeather> =
+        state.map { it.currentWeather }.distinctUntilChanged()
+    val dailyForecast: LiveData<List<DailyForecast>> =
+        state.map { it.dailyForecasts }.distinctUntilChanged()
+    val hourlyForecast: LiveData<List<HourlyForecast>> =
+        state.map { it.hourlyForecasts }.distinctUntilChanged()
 
     fun initialize() {
         if (!initialized) {
@@ -37,14 +48,12 @@ class ForecastViewModel @Inject constructor(
 
     private fun loadData(isRefreshing: Boolean = false) {
         viewModelScope.launch {
-            //TODO disable previous job
+            //TODO cancel previous job
 
-            uiStateMutable.update { it ->
-                it.copy(
-                    isLoading = true,
-                    isRefreshing = isRefreshing
-                )
-            }
+            stateMutable.value = stateMutable.value?.copy(
+                isLoading = true,
+                isRefreshing = isRefreshing
+            )
 
             val result = forecastUseCase.getForecast()
             when (result) {
@@ -53,24 +62,35 @@ class ForecastViewModel @Inject constructor(
                 }
 
                 is Result.Success -> {
-                    text.value = text.value?.copy(result.data.location.name)
-                    uiStateMutable.update { it ->
-                        it.copy(
-                            isLoading = false,
-                            isRefreshing = false,
-                            items = result.data.forecast.forecastDays[0].hour.map {
-                                HourlyForecast(
-                                    hour = convertEpochToLocalTime(it.timestamp),
-                                    temp = it.temp.toString(),
-                                    timestamp = it.timestamp,
-                                )
-                            }
-                        )
-                    }
+                    stateMutable.value = stateMutable.value?.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        title = result.data.location.name,
+                        currentWeather = CurrentWeather(
+                            temp = result.data.current.temp.toString(), //TODO
+                            iconUrl = "https:${result.data.current.condition.iconUrl}",
+                            updatedAt = "updated at ...",
+                        ),
+                        hourlyForecasts = result.data.forecast.forecastDays[0].hour.map {
+                            HourlyForecast(
+                                hour = convertEpochToLocalTime(it.timestamp),
+                                temp = it.temp.toString(),
+                                iconUrl = "https://cdn.weatherapi.com/weather/64x64/day/122.png", //TODO
+                                timestamp = it.timestamp,
+                            )
+                        },
+                        dailyForecasts = result.data.forecast.forecastDays.map {
+                            DailyForecast(
+                                day = it.date,
+                                tempMax = it.day.maxTemp.toString(),
+                                tempMin = it.day.minTemp.toString(),
+                                iconUrl = "https:${it.day.condition.iconUrl}",
+                                timestamp = 100
+                            )
+                        }
+                    )
                 }
             }
-
-
         }
     }
 
@@ -91,7 +111,10 @@ fun convertEpochToLocalTime(epochSeconds: Long): String {
 data class UiState(
     val isLoading: Boolean,
     val isRefreshing: Boolean,
-    val items: List<HourlyForecast>
+    val title: String,
+    val currentWeather: CurrentWeather,
+    val hourlyForecasts: List<HourlyForecast>,
+    val dailyForecasts: List<DailyForecast>
 ) {
 
     companion object {
@@ -99,7 +122,14 @@ data class UiState(
             UiState(
                 isLoading = false,
                 isRefreshing = false,
-                items = emptyList()
+                title = "",
+                currentWeather = CurrentWeather(
+                    temp = "",
+                    iconUrl = "",
+                    updatedAt = ""
+                ),
+                hourlyForecasts = emptyList(),
+                dailyForecasts = emptyList()
             )
     }
 }

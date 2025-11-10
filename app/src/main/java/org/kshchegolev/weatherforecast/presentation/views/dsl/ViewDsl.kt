@@ -13,11 +13,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textview.MaterialTextView
 
 inline fun ViewGroup.verticalLayout(init: LinearLayout.() -> Unit): LinearLayout {
@@ -76,6 +78,22 @@ inline fun ViewGroup.button(
         this.text = text
         this@button.addView(this)
         init()
+    }
+}
+
+inline fun ViewGroup.progress(
+    init: CircularProgressIndicator.() -> Unit = {}
+): CircularProgressIndicator {
+    return CircularProgressIndicator(context).apply {
+        this@progress.addView(this)
+        init()
+    }
+}
+
+inline fun ViewGroup.recyclerView(init: RecyclerView.() -> Unit): RecyclerView {
+    return RecyclerView(context).apply {
+        init()
+        this@recyclerView.addView(this)
     }
 }
 

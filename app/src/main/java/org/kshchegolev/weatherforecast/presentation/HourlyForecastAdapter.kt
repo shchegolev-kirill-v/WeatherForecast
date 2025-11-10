@@ -1,26 +1,32 @@
 package org.kshchegolev.weatherforecast.presentation
 
-import android.view.LayoutInflater
+import android.content.Context
+import android.graphics.Color
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.textview.MaterialTextView
 import coil3.load
+import com.google.android.material.R.style
+import com.google.android.material.textview.MaterialTextView
 import org.kshchegolev.weatherforecast.R
 import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
+import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
+import org.kshchegolev.weatherforecast.presentation.views.dsl.imageView
+import org.kshchegolev.weatherforecast.presentation.views.dsl.size
+import org.kshchegolev.weatherforecast.presentation.views.dsl.textView
+import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentHeight
+import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentWidth
 
 class HourlyForecastAdapter : ListAdapter<HourlyForecast, HourlyForecastVH>(HourlyForecastDiff) {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): HourlyForecastVH = HourlyForecastVH(
-        itemView = LayoutInflater
-            .from(parent.context)
-            .inflate(R.layout.hourly_forecast_item, parent, false)
-    )
+    ): HourlyForecastVH = HourlyForecastVH(itemView = createItemView(parent.context))
 
     override fun onBindViewHolder(
         holder: HourlyForecastVH,
@@ -37,6 +43,36 @@ class HourlyForecastAdapter : ListAdapter<HourlyForecast, HourlyForecastVH>(Hour
         override fun areContentsTheSame(oldItem: HourlyForecast, newItem: HourlyForecast) =
             oldItem == newItem
     }
+
+    private fun createItemView(context: Context): View {
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(12.dp, 12.dp, 16.dp, 12.dp)
+
+            textView {
+                id = R.id.hourly_forecast_hour_textview
+                wrapContentWidth()
+                wrapContentHeight()
+                setTextAppearance(style.TextAppearance_MaterialComponents_Subtitle1)
+                setTextColor(context.getColor(R.color.md_theme_secondary))
+            }
+
+            imageView {
+                id = R.id.hourly_forecast_icon_imageview
+                size(48.dp, 48.dp)
+            }
+
+            // Temperature text view
+            textView {
+                id = R.id.hourly_forecast_temp_textview
+                wrapContentWidth()
+                wrapContentHeight()
+                setTextAppearance(style.TextAppearance_Material3_BodyLarge_Emphasized)
+                setTextColor(context.getColor(R.color.md_theme_primary))
+            }
+        }
+    }
 }
 
 class HourlyForecastVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -48,7 +84,7 @@ class HourlyForecastVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         hourlyForecast.apply {
             hourTextView.text = hourlyForecast.hour
-            iconImageView.load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
+            iconImageView.load(hourlyForecast.iconUrl)
             tempTextView.text = hourlyForecast.temp
         }
     }

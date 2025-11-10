@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="hourly_forecast_hour_textview" type="id"/>
+    <item name="hourly_forecast_icon_imageview" type="id"/>
+    <item name="hourly_forecast_temp_textview" type="id"/>
+</resources>

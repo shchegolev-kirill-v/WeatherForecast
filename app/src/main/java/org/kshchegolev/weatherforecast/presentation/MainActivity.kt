@@ -24,13 +24,17 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.R
 import org.kshchegolev.weatherforecast.presentation.views.dsl.appBarLayout
+import org.kshchegolev.weatherforecast.presentation.views.dsl.bind
 import org.kshchegolev.weatherforecast.presentation.views.dsl.cardView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
 import org.kshchegolev.weatherforecast.presentation.views.dsl.frameLayout
+import org.kshchegolev.weatherforecast.presentation.views.dsl.height
 import org.kshchegolev.weatherforecast.presentation.views.dsl.horizontalLayout
 import org.kshchegolev.weatherforecast.presentation.views.dsl.imageView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.matchParentHeight
 import org.kshchegolev.weatherforecast.presentation.views.dsl.matchParentWidth
+import org.kshchegolev.weatherforecast.presentation.views.dsl.progress
+import org.kshchegolev.weatherforecast.presentation.views.dsl.recyclerView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.scrollView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.setContent
 import org.kshchegolev.weatherforecast.presentation.views.dsl.size
@@ -53,15 +57,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-
         setContent {
             appBarLayout {
                 matchParentWidth()
                 wrapContentHeight()
                 toolbar {
                     wrapContentHeight()
-                    title = "TITLE"
+                    bind(viewModel.title) { it ->
+                        title = it.ifEmpty { getString(R.string.app_name) }
+                    }
                 }
             }
             swipeRefreshLayout {
@@ -80,10 +84,45 @@ class MainActivity : AppCompatActivity() {
                         clipChildren = false
                         clipToPadding = false
                         verticalLayout {
+                            bind(viewModel.state) { state ->
+                                visibility = if (state.isLoading) View.GONE else View.VISIBLE
+                            }
                             currentWeather()
+                            space { size(0.dp, 24.dp) }
+                            cardView {
+                                setContentPadding(12.dp, 12.dp, 12.dp, 12.dp)
+                                cardElevation = 8f.dp
+                                recyclerView {
+                                    matchParentWidth()
+                                    wrapContentHeight()
+                                    val hourlyAdapter = HourlyForecastAdapter()
+                                    bind(viewModel.hourlyForecast) {
+                                        hourlyAdapter.submitList(it)
+                                    }
+                                    layoutManager = LinearLayoutManager(
+                                        context,
+                                        LinearLayoutManager.HORIZONTAL,
+                                        false
+                                    )
+                                    adapter = hourlyAdapter
+
+                                }
+                            }
                             space { size(0.dp, 24.dp) }
                             dailyWeather()
                         }
+                        verticalLayout {
+                            matchParentWidth()
+                            height(200.dp)
+                            gravity = Gravity.CENTER_HORIZONTAL
+                            bind(viewModel.state) { state ->
+                                visibility = if (state.isLoading) View.VISIBLE else View.GONE
+                            }
+                            progress {
+                                isIndeterminate = true
+                            }
+                        }
+                        //TODO to add error state
                     }
                 }
             }
@@ -116,7 +155,7 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect {
                     when {
-                        it.isLoading && it.items.isEmpty() -> {
+                        it.isLoading && it.hourlyForecasts.isEmpty() -> {
                             loadingLayout.visibility = View.VISIBLE
                             errorLayout.visibility = View.GONE
                             contentLayout.visibility = View.GONE
@@ -128,7 +167,7 @@ class MainActivity : AppCompatActivity() {
                             contentLayout.visibility = View.VISIBLE
                         }
                     }
-                    hourlyForecastAdapter.submitList(it.items)
+                    hourlyForecastAdapter.submitList(it.hourlyForecasts)
                 }
             }
         }
@@ -143,25 +182,32 @@ class MainActivity : AppCompatActivity() {
                 textView {
                     wrapContentWidth()
                     wrapContentHeight()
-                    text = "29°"
                     setTextAppearance(style.TextAppearance_Material3_DisplayLarge)
                     setTextColor(getColor(R.color.md_theme_primary))
+                    bind(viewModel.currentWeather) { weather ->
+                        text = weather.temp
+                    }
                 }
                 imageView {
                     size(64.dp, 64.dp)
-                    load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
+                    bind(viewModel.currentWeather) { weather ->
+                        if (weather.iconUrl.isNotEmpty()) {
+                            load(weather.iconUrl)
+                        }
+                    }
                 }
                 textView {
                     matchParentWidth()
                     matchParentHeight()
-                    text = "updated at 12:00"
                     textAlignment = View.TEXT_ALIGNMENT_TEXT_END
                     setTextAppearance(style.TextAppearance_MaterialComponents_Caption)
                     setTextColor(getColor(R.color.md_theme_secondary))
+                    bind(viewModel.currentWeather) { weather ->
+                        text = weather.updatedAt
+                    }
                 }
             }
         }
-
 
     private fun ViewGroup.dailyWeather() =
         cardView {
@@ -172,43 +218,43 @@ class MainActivity : AppCompatActivity() {
             verticalLayout {
                 matchParentWidth()
                 wrapContentHeight()
-                repeat(3) {
-                    horizontalLayout {
-                        matchParentWidth()
-                        wrapContentHeight()
-                        gravity = Gravity.CENTER_VERTICAL
-                        textView {
-                            weight(0.1f)
+                bind(viewModel.dailyForecast) { items ->
+                    items.map { forecast ->
+                        horizontalLayout {
+                            matchParentWidth()
                             wrapContentHeight()
-                            setTextAppearance(style.TextAppearance_Material3_BodyLarge)
-                            setTextColor(getColor(R.color.md_theme_primary))
-                            text = "Day"
-                        }
-                        imageView {
-                            size(48.dp, 48.dp)
-                            load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
-                        }
-                        textView {
-                            wrapContentWidth()
-                            wrapContentHeight()
-                            setTextAppearance(style.TextAppearance_Material3_BodyLarge_Emphasized)
-                            setTextColor(getColor(R.color.md_theme_primary))
-                            setPadding(12.dp, 0.dp, 0.dp, 0.dp)
-                            text = "33°"
-                        }
-                        textView {
-                            //weight(0.1f)
-                            wrapContentHeight()
-                            setTextAppearance(style.TextAppearance_Material3_BodyLarge)
-                            setTextColor(getColor(R.color.md_theme_secondary))
-                            setPadding(12.dp, 0.dp, 0.dp, 0.dp)
-                            text = "21°"
+                            gravity = Gravity.CENTER_VERTICAL
+                            textView {
+                                weight(0.1f)
+                                wrapContentHeight()
+                                setTextAppearance(style.TextAppearance_Material3_BodyLarge)
+                                setTextColor(getColor(R.color.md_theme_primary))
+                                text = forecast.day
+                            }
+                            imageView {
+                                size(48.dp, 48.dp)
+                                load(forecast.iconUrl)
+                            }
+                            textView {
+                                wrapContentWidth()
+                                wrapContentHeight()
+                                setTextAppearance(style.TextAppearance_Material3_BodyLarge_Emphasized)
+                                setTextColor(getColor(R.color.md_theme_primary))
+                                setPadding(12.dp, 0.dp, 0.dp, 0.dp)
+                                text = forecast.tempMax
+                            }
+                            textView {
+                                wrapContentHeight()
+                                setTextAppearance(style.TextAppearance_Material3_BodyLarge)
+                                setTextColor(getColor(R.color.md_theme_secondary))
+                                setPadding(12.dp, 0.dp, 0.dp, 0.dp)
+                                text = forecast.tempMin
+                            }
                         }
                     }
                 }
             }
         }
-
 
     private fun initializeRecyclerView() {
         val hourlyRecyclerView = findViewById<RecyclerView>(R.id.hourly_recycleView)
