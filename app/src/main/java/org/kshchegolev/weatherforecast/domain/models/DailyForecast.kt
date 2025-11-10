@@ -4,6 +4,5 @@ data class DailyForecast(
     val day: String,
     val tempMax: String,
     val tempMin: String,
-    val iconUrl: String,
-    val timestamp: Long
+    val iconUrl: String
 )

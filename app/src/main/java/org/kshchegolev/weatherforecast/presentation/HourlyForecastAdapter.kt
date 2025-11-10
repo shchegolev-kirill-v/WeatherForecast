@@ -59,10 +59,10 @@ class HourlyForecastAdapter : ListAdapter<HourlyForecast, HourlyForecastVH>(Hour
 
             imageView {
                 id = R.id.hourly_forecast_icon_imageview
-                size(48.dp, 48.dp)
+                setPadding(0.dp, 8.dp, 0.dp, 8.dp)
+                size(56.dp, 56.dp)
             }
 
-            // Temperature text view
             textView {
                 id = R.id.hourly_forecast_temp_textview
                 wrapContentWidth()

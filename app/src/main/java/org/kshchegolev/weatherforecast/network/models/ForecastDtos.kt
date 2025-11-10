@@ -27,6 +27,7 @@ data class ForecastDto(
 
 data class ForecastDayDto(
     @SerializedName("date") val date: String,
+    @SerializedName("date_epoch") val timestamp: Long,
     @SerializedName("day") val day: DayDto,
     @SerializedName("hour") val hour: List<HourDto>
 )
