@@ -16,6 +16,6 @@ interface RetrofitForecastApi {
     private companion object {
         const val DAYS_COUNT = 3
         const val LOCATION = "55.7569,37.6151"
-        const val API_KEY = "fa8b3df74d4042b9aa7135114252304" // TODO move to config
+        const val API_KEY = "fa8b3df74d4042b9aa7135114252304"
     }
 }

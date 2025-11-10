@@ -4,27 +4,19 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.setPadding
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import coil3.load
 import com.google.android.material.R.style
-import com.google.android.material.textview.MaterialTextView
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.R
+import org.kshchegolev.weatherforecast.presentation.views.dsl.alwaysShow
 import org.kshchegolev.weatherforecast.presentation.views.dsl.appBarLayout
 import org.kshchegolev.weatherforecast.presentation.views.dsl.bind
+import org.kshchegolev.weatherforecast.presentation.views.dsl.button
 import org.kshchegolev.weatherforecast.presentation.views.dsl.cardView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
 import org.kshchegolev.weatherforecast.presentation.views.dsl.frameLayout
@@ -36,7 +28,9 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.matchParentWidth
 import org.kshchegolev.weatherforecast.presentation.views.dsl.progress
 import org.kshchegolev.weatherforecast.presentation.views.dsl.recyclerView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.scrollView
+import org.kshchegolev.weatherforecast.presentation.views.dsl.scrollingViewBehavior
 import org.kshchegolev.weatherforecast.presentation.views.dsl.setContent
+import org.kshchegolev.weatherforecast.presentation.views.dsl.showSnackbar
 import org.kshchegolev.weatherforecast.presentation.views.dsl.size
 import org.kshchegolev.weatherforecast.presentation.views.dsl.space
 import org.kshchegolev.weatherforecast.presentation.views.dsl.swipeRefreshLayout
@@ -50,28 +44,35 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentWidth
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var hourlyForecastAdapter: HourlyForecastAdapter
-
     private val viewModel by viewModels<ForecastViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            appBarLayout {
-                matchParentWidth()
-                wrapContentHeight()
-                toolbar {
-                    wrapContentHeight()
-                    bind(viewModel.title) { it ->
-                        title = it.ifEmpty { getString(R.string.app_name) }
-                    }
+            matchParentWidth()
+            matchParentHeight()
+            appBar()
+            bind(viewModel.state) {
+                if (it.shouldShowErrorSnackBar) {
+                    showSnackbar(getString(R.string.error_msg))
+                    viewModel.snackBarShown()
                 }
             }
             swipeRefreshLayout {
                 matchParentWidth()
                 matchParentHeight()
+                scrollingViewBehavior()
                 setColorSchemeColors(getColor(R.color.md_theme_primary))
+                bind(viewModel.state) {
+                    isRefreshing = it.isRefreshing
+                }
+                bind(viewModel.showPanel) {
+                    isEnabled = it == Panel.Content
+                }
+                setOnRefreshListener {
+                    viewModel.refreshData()
+                }
                 scrollView {
                     matchParentWidth()
                     matchParentHeight()
@@ -79,100 +80,87 @@ class MainActivity : AppCompatActivity() {
                     clipToPadding = false
                     frameLayout {
                         matchParentWidth()
-                        wrapContentHeight()
+                        matchParentHeight()
                         setPadding(16.dp)
                         clipChildren = false
                         clipToPadding = false
                         verticalLayout {
-                            bind(viewModel.state) { state ->
-                                visibility = if (state.isLoading) View.GONE else View.VISIBLE
+                            bind(viewModel.showPanel) {
+                                visibility = if (it == Panel.Content)
+                                    View.VISIBLE
+                                else
+                                    View.GONE
+                            }
+                            bind(viewModel.showPanel) {
+                                visibility = if (it == Panel.Content)
+                                    View.VISIBLE
+                                else
+                                    View.GONE
                             }
                             currentWeather()
                             space { size(0.dp, 24.dp) }
-                            cardView {
-                                setContentPadding(12.dp, 12.dp, 12.dp, 12.dp)
-                                cardElevation = 8f.dp
-                                recyclerView {
-                                    matchParentWidth()
-                                    wrapContentHeight()
-                                    val hourlyAdapter = HourlyForecastAdapter()
-                                    bind(viewModel.hourlyForecast) {
-                                        hourlyAdapter.submitList(it)
-                                    }
-                                    layoutManager = LinearLayoutManager(
-                                        context,
-                                        LinearLayoutManager.HORIZONTAL,
-                                        false
-                                    )
-                                    adapter = hourlyAdapter
-
-                                }
-                            }
+                            hourlyForecast()
                             space { size(0.dp, 24.dp) }
-                            dailyWeather()
+                            dailyForecast()
                         }
                         verticalLayout {
                             matchParentWidth()
                             height(200.dp)
-                            gravity = Gravity.CENTER_HORIZONTAL
-                            bind(viewModel.state) { state ->
-                                visibility = if (state.isLoading) View.VISIBLE else View.GONE
+                            gravity = Gravity.CENTER
+                            bind(viewModel.showPanel) {
+                                visibility =
+                                    if (it == Panel.Loading) View.VISIBLE else View.GONE
                             }
                             progress {
                                 isIndeterminate = true
                             }
                         }
-                        //TODO to add error state
+                        verticalLayout {
+                            matchParentWidth()
+                            matchParentHeight()
+                            gravity = Gravity.CENTER
+                            bind(viewModel.showPanel) {
+                                visibility =
+                                    if (it == Panel.Error) View.VISIBLE else View.GONE
+                            }
+                            textView {
+                                wrapContentWidth()
+                                wrapContentHeight()
+                                setTextAppearance(style.TextAppearance_Material3_BodyLarge)
+                                setTextColor(getColor(R.color.md_theme_secondary))
+                                text = getString(R.string.error_msg)
+                            }
+                            space { size(0.dp, 24.dp) }
+                            button {
+                                wrapContentWidth()
+                                wrapContentHeight()
+                                setTextAppearance(style.TextAppearance_MaterialComponents_Button)
+                                setTextColor(getColor(R.color.md_theme_onPrimary))
+                                text = getString(R.string.reload_btn)
+                                setOnClickListener { viewModel.loadData() }
+                            }
+                        }
                     }
                 }
             }
         }
 
         viewModel.initialize()
-        return
+    }
 
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-
-        initializeRecyclerView()
-
-        val loadingLayout = findViewById<LinearLayout>(R.id.loading_layout)
-        val errorLayout = findViewById<LinearLayout>(R.id.error_layout)
-        val contentLayout = findViewById<LinearLayout>(R.id.content_layout)
-
-        val currentTempTextView = findViewById<MaterialTextView>(R.id.current_temp_textview)
-        val weatherIconImageView = findViewById<ImageView>(R.id.weather_icon_imageview)
-        val updatedAtTextView = findViewById<MaterialTextView>(R.id.updated_at_textview)
-        currentTempTextView.text = "29°"
-        weatherIconImageView.load("https://cdn.weatherapi.com/weather/64x64/day/122.png")
-        updatedAtTextView.text = getString(R.string.updated_at, "12:00")
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect {
-                    when {
-                        it.isLoading && it.hourlyForecasts.isEmpty() -> {
-                            loadingLayout.visibility = View.VISIBLE
-                            errorLayout.visibility = View.GONE
-                            contentLayout.visibility = View.GONE
-                        }
-
-                        !it.isLoading -> {
-                            loadingLayout.visibility = View.GONE
-                            errorLayout.visibility = View.GONE
-                            contentLayout.visibility = View.VISIBLE
-                        }
-                    }
-                    hourlyForecastAdapter.submitList(it.hourlyForecasts)
+    private fun ViewGroup.appBar() =
+        appBarLayout {
+            matchParentWidth()
+            wrapContentHeight()
+            toolbar {
+                matchParentWidth()
+                wrapContentHeight()
+                alwaysShow()
+                bind(viewModel.title) { it ->
+                    title = it.ifEmpty { getString(R.string.app_name) }
                 }
             }
         }
-
-    }
 
     private fun ViewGroup.currentWeather() =
         cardView {
@@ -203,13 +191,33 @@ class MainActivity : AppCompatActivity() {
                     setTextAppearance(style.TextAppearance_MaterialComponents_Caption)
                     setTextColor(getColor(R.color.md_theme_secondary))
                     bind(viewModel.currentWeather) { weather ->
-                        text = weather.updatedAt
+                        text = getString(R.string.updated_at, weather.updatedAt)
                     }
                 }
             }
         }
 
-    private fun ViewGroup.dailyWeather() =
+    private fun ViewGroup.hourlyForecast() =
+        cardView {
+            setContentPadding(12.dp, 12.dp, 12.dp, 12.dp)
+            cardElevation = 8f.dp
+            recyclerView {
+                matchParentWidth()
+                wrapContentHeight()
+                val hourlyAdapter = HourlyForecastAdapter()
+                bind(viewModel.hourlyForecast) {
+                    hourlyAdapter.submitList(it)
+                }
+                layoutManager = LinearLayoutManager(
+                    context,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
+                adapter = hourlyAdapter
+            }
+        }
+
+    private fun ViewGroup.dailyForecast() =
         cardView {
             matchParentWidth()
             wrapContentHeight()
@@ -219,6 +227,7 @@ class MainActivity : AppCompatActivity() {
                 matchParentWidth()
                 wrapContentHeight()
                 bind(viewModel.dailyForecast) { items ->
+                    removeAllViews()
                     items.map { forecast ->
                         horizontalLayout {
                             matchParentWidth()
@@ -255,13 +264,4 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
-    private fun initializeRecyclerView() {
-        val hourlyRecyclerView = findViewById<RecyclerView>(R.id.hourly_recycleView)
-        hourlyForecastAdapter = HourlyForecastAdapter()
-        hourlyRecyclerView.apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-            adapter = hourlyForecastAdapter
-        }
-    }
 }

@@ -25,7 +25,7 @@ class ForecastViewModel @Inject constructor(
     private val forecastUseCase: GetForecastUseCase
 ) : ViewModel() {
 
-    private val initialized = false
+    private var initialized = false
     private val uiStateMutable = MutableStateFlow(UiState.EMPTY)
     val uiState = uiStateMutable.asStateFlow()
 
@@ -39,41 +39,59 @@ class ForecastViewModel @Inject constructor(
         state.map { it.dailyForecasts }.distinctUntilChanged()
     val hourlyForecast: LiveData<List<HourlyForecast>> =
         state.map { it.hourlyForecasts }.distinctUntilChanged()
+    val showPanel: LiveData<Panel> =
+        state.map { it.getPanelToShow() }.distinctUntilChanged()
 
     fun initialize() {
         if (!initialized) {
+            initialized = true
             loadData()
         }
     }
 
-    private fun loadData(isRefreshing: Boolean = false) {
+    fun refreshData() {
+        loadData(isRefreshing = true)
+    }
+
+    fun loadData(isRefreshing: Boolean = false) {
         viewModelScope.launch {
             //TODO cancel previous job
 
             stateMutable.value = stateMutable.value?.copy(
                 isLoading = true,
-                isRefreshing = isRefreshing
+                isRefreshing = isRefreshing,
+                isError = false
             )
 
             val result = forecastUseCase.getForecast()
             when (result) {
                 is Result.Failure -> {
-                    println(result.message)
+                    val shouldShowErrorSnackBar = stateMutable.value?.run {
+                        dailyForecasts.isNotEmpty()
+                    } ?: false
+                    stateMutable.value = stateMutable.value?.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        isError = true,
+                        shouldShowErrorSnackBar = shouldShowErrorSnackBar
+                    )
                 }
 
                 is Result.Success -> {
                     stateMutable.value = stateMutable.value?.copy(
                         isLoading = false,
                         isRefreshing = false,
+                        isError = false,
+                        shouldShowErrorSnackBar = false,
                         title = result.data.location.name,
                         currentWeather = CurrentWeather(
                             temp = result.data.current.temp.toString(), //TODO
                             iconUrl = "https:${result.data.current.condition.iconUrl}",
-                            updatedAt = "updated at ...",
+                            updatedAt = convertEpochToLocalTimeFormatted(Instant.now().epochSecond),
                         ),
                         hourlyForecasts = result.data.forecast.forecastDays[0].hour.map {
                             HourlyForecast(
-                                hour = convertEpochToLocalTime(it.timestamp),
+                                hour = convertEpochToLocalTimeFormatted(it.timestamp),
                                 temp = it.temp.toString(),
                                 iconUrl = "https://cdn.weatherapi.com/weather/64x64/day/122.png", //TODO
                                 timestamp = it.timestamp,
@@ -94,13 +112,18 @@ class ForecastViewModel @Inject constructor(
         }
     }
 
+    fun snackBarShown() {
+        stateMutable.value = stateMutable.value?.copy(
+            shouldShowErrorSnackBar = false
+        )
+    }
+
     override fun onCleared() {
         super.onCleared()
     }
 }
 
-
-fun convertEpochToLocalTime(epochSeconds: Long): String {
+private fun convertEpochToLocalTimeFormatted(epochSeconds: Long): String {
     val instant = Instant.ofEpochSecond(epochSeconds)
     val zoneId = ZoneId.systemDefault()
     val formatter = DateTimeFormatter.ofPattern("HH:mm").withZone(zoneId)
@@ -108,9 +131,22 @@ fun convertEpochToLocalTime(epochSeconds: Long): String {
     return formatter.format(instant)
 }
 
+private fun UiState.getPanelToShow(): Panel {
+    return when {
+        isLoading && !isRefreshing -> Panel.Loading
+        isLoading && isRefreshing -> Panel.Content
+        isError && dailyForecasts.isNotEmpty() -> Panel.Content
+        isError -> Panel.Error
+        else -> Panel.Content
+    }
+}
+
+
 data class UiState(
     val isLoading: Boolean,
     val isRefreshing: Boolean,
+    val isError: Boolean,
+    val shouldShowErrorSnackBar: Boolean,
     val title: String,
     val currentWeather: CurrentWeather,
     val hourlyForecasts: List<HourlyForecast>,
@@ -122,6 +158,8 @@ data class UiState(
             UiState(
                 isLoading = false,
                 isRefreshing = false,
+                isError = false,
+                shouldShowErrorSnackBar = false,
                 title = "",
                 currentWeather = CurrentWeather(
                     temp = "",
@@ -132,4 +170,8 @@ data class UiState(
                 dailyForecasts = emptyList()
             )
     }
+}
+
+enum class Panel {
+    Loading, Error, Content
 }

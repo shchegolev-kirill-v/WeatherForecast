@@ -2,15 +2,13 @@ package org.kshchegolev.weatherforecast.presentation.views.dsl
 
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Space
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -20,6 +18,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textview.MaterialTextView
 
 inline fun ViewGroup.verticalLayout(init: LinearLayout.() -> Unit): LinearLayout {
@@ -105,6 +104,7 @@ inline fun ViewGroup.appBarLayout(
         init()
     }
 }
+
 inline fun ViewGroup.toolbar(
     init: MaterialToolbar.() -> Unit = {}
 ): MaterialToolbar {
@@ -141,16 +141,24 @@ inline fun ViewGroup.space(
     }
 }
 
-inline fun ViewGroup.constraintLayout(init: ConstraintLayout.() -> Unit): ConstraintLayout {
-    return ConstraintLayout(context).apply {
-        this@constraintLayout.addView(this)
-        init()
+fun View.showSnackbar(
+    message: String,
+    duration: Int = Snackbar.LENGTH_SHORT,
+    actionText: String? = null,
+    action: (() -> Unit)? = null
+): Snackbar {
+    val snackbar = Snackbar.make(this, message, duration)
+    actionText?.let { text ->
+        snackbar.setAction(text) { action?.invoke() }
     }
+
+    snackbar.show()
+    return snackbar
 }
 
-inline fun AppCompatActivity.setContent(init: LinearLayout.() -> Unit) {
-    val root = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
+inline fun AppCompatActivity.setContent(init: CoordinatorLayout.() -> Unit) {
+    val root = CoordinatorLayout(this).apply {
+        fitsSystemWindows = true
     }
     setContentView(root)
     ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->

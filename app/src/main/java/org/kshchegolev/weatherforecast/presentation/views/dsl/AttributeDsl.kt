@@ -6,6 +6,10 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.MaterialToolbar
 
 fun View.size(width: Int, height: Int) {
     val params = layoutParams ?: ViewGroup.LayoutParams(width, height)
@@ -30,6 +34,22 @@ fun View.weight(weight: Float) {
     val params = layoutParams as? LinearLayout.LayoutParams
     if (params != null) {
         params.weight = weight
+        layoutParams = params
+    }
+}
+
+fun MaterialToolbar.alwaysShow() {
+    val params = layoutParams as? AppBarLayout.LayoutParams
+    if (params != null) {
+        params.scrollFlags = 0
+        layoutParams = params
+    }
+}
+
+fun SwipeRefreshLayout.scrollingViewBehavior() {
+    val params = layoutParams as? CoordinatorLayout.LayoutParams
+    if (params != null) {
+        params.behavior = AppBarLayout.ScrollingViewBehavior()
         layoutParams = params
     }
 }
