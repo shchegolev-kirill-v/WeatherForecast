@@ -59,11 +59,7 @@ internal class ForecastViewModel @Inject constructor(
     }
 
     fun loadData(isRefreshing: Boolean = false) {
-        loadDataJob?.let { job ->
-            if (job.isActive) {
-                job.cancel(CancellationException("New loadData request"))
-            }
-        }
+        loadDataJob.cancelIfActive()
         loadDataJob = viewModelScope.launch {
             stateMutable.value = stateMutable.value?.copy(
                 isLoading = true,
@@ -135,14 +131,20 @@ internal class ForecastViewModel @Inject constructor(
     }
 }
 
-private fun UiState.getPanelToShow(): Panel {
-    return when {
+private fun Job?.cancelIfActive() =
+    this?.let { job ->
+        if (isActive) {
+            cancel(CancellationException("New loadData request"))
+        }
+    }
+
+private fun UiState.getPanelToShow(): Panel =
+    when {
         isLoading && !isRefreshing -> Panel.Loading
         isLoading && isRefreshing -> Panel.Content
         isError && dailyForecasts.isNotEmpty() -> Panel.Content
         isError -> Panel.Error
         else -> Panel.Content
     }
-}
 
 

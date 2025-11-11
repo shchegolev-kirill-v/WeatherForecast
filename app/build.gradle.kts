@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
+}
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = File(rootProject.rootDir, "local.properties")
+    if (localPropertiesFile.exists()) {
+        load(localPropertiesFile.inputStream())
+    }
 }
 
 android {
@@ -28,7 +37,23 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"https://api.weatherapi.com/v1/\"")
+            buildConfigField(
+                "String",
+                "API_KEY",
+                "\"${localProperties.getProperty("api.key") ?: "fa8b3df74d4042b9aa7135114252304"}\"")
         }
+        debug {
+            isMinifyEnabled = false
+            buildConfigField("String", "BASE_URL", "\"https://api.weatherapi.com/v1/\"")
+            buildConfigField(
+                "String",
+                "API_KEY",
+                "\"${localProperties.getProperty("api.key") ?: "fa8b3df74d4042b9aa7135114252304"}\"")
+        }
+    }
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
