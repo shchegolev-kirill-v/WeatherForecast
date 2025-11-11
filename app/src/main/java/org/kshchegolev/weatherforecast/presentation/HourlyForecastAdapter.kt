@@ -67,7 +67,7 @@ internal class HourlyForecastAdapter : ListAdapter<HourlyForecastUi, HourlyForec
                 id = R.id.hourly_forecast_temp_textview
                 wrapContentWidth()
                 wrapContentHeight()
-                setTextAppearance(style.TextAppearance_Material3_BodyLarge_Emphasized)
+                setTextAppearance(style.TextAppearance_Material3_HeadlineMedium)
                 setTextColor(context.getColor(R.color.md_theme_primary))
             }
         }

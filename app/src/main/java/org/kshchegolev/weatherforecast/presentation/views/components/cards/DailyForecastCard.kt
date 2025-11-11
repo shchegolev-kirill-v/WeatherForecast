@@ -50,7 +50,7 @@ private fun ViewGroup.dailyForecastItem(
         textView {
             weight(0.1f)
             wrapContentHeight()
-            setTextAppearance(style.TextAppearance_Material3_BodyLarge)
+            setTextAppearance(style.TextAppearance_Material3_BodyLarge_Emphasized)
             setTextColor(context.getColor(R.color.md_theme_primary))
             text = dailyForecast.day
         }
@@ -61,14 +61,14 @@ private fun ViewGroup.dailyForecastItem(
         textView {
             wrapContentWidth()
             wrapContentHeight()
-            setTextAppearance(style.TextAppearance_Material3_BodyLarge_Emphasized)
+            setTextAppearance(style.TextAppearance_Material3_HeadlineMedium)
             setTextColor(context.getColor(R.color.md_theme_primary))
             setPadding(12.dp, 0.dp, 0.dp, 0.dp)
             text = dailyForecast.tempMax
         }
         textView {
             wrapContentHeight()
-            setTextAppearance(style.TextAppearance_Material3_BodyLarge)
+            setTextAppearance(style.TextAppearance_Material3_HeadlineSmall)
             setTextColor(context.getColor(R.color.md_theme_secondary))
             setPadding(12.dp, 0.dp, 0.dp, 0.dp)
             text = dailyForecast.tempMin
