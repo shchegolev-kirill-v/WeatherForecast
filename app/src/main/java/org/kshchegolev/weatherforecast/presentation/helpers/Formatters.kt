@@ -10,15 +10,18 @@ object Formatters {
     private val hourMinutesFormatter = DateTimeFormatter.ofPattern("HH:mm").withZone(zoneId)
     private val dateFormatter = DateTimeFormatter.ofPattern("dd/MM").withZone(zoneId)
 
-    fun convertEpochToLocalTimeFormatted(epochSeconds: Long): String {
-        val instant = Instant.ofEpochSecond(epochSeconds)
-        return hourMinutesFormatter.format(instant)
-    }
+    fun Long?.toLocalTimeFormattedOrEmpty(): String =
+        this?.let {
+            val instant = Instant.ofEpochSecond(this)
+            hourMinutesFormatter.format(instant)
+        } ?: ""
 
-    fun convertEpochToLocalDateFormatted(epochSeconds: Long): String {
-        val instant = Instant.ofEpochSecond(epochSeconds)
-        return dateFormatter.format(instant)
-    }
+
+    fun Long?.toLocalDateFormattedOrEmpty(): String =
+        this?.let {
+            val instant = Instant.ofEpochSecond(this)
+            dateFormatter.format(instant)
+        } ?: ""
 
     fun Double?.toTemperatureOrDefault(default: String = "--°"): String =
         when {
@@ -27,6 +30,6 @@ object Formatters {
             else -> "%.0f°".format(this)
         }
 
-    fun String.toCompleteUrl(): String = "https:$this"
+    fun String?.toCompleteUrlOrNull(): String? = this?.trim()?.let {"https:$this"}
 
 }

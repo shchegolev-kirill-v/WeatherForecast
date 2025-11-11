@@ -13,7 +13,7 @@ import coil3.load
 import com.google.android.material.R.style
 import com.google.android.material.textview.MaterialTextView
 import org.kshchegolev.weatherforecast.R
-import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
+import org.kshchegolev.weatherforecast.presentation.models.HourlyForecastUi
 import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
 import org.kshchegolev.weatherforecast.presentation.views.dsl.imageView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.size
@@ -21,7 +21,7 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.textView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentHeight
 import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentWidth
 
-internal class HourlyForecastAdapter : ListAdapter<HourlyForecast, HourlyForecastVH>(HourlyForecastDiff) {
+internal class HourlyForecastAdapter : ListAdapter<HourlyForecastUi, HourlyForecastVH>(HourlyForecastDiff) {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -34,12 +34,12 @@ internal class HourlyForecastAdapter : ListAdapter<HourlyForecast, HourlyForecas
         holder.bindData(getItem(position))
     }
 
-    private object HourlyForecastDiff : DiffUtil.ItemCallback<HourlyForecast>() {
+    private object HourlyForecastDiff : DiffUtil.ItemCallback<HourlyForecastUi>() {
 
-        override fun areItemsTheSame(oldItem: HourlyForecast, newItem: HourlyForecast) =
+        override fun areItemsTheSame(oldItem: HourlyForecastUi, newItem: HourlyForecastUi) =
             oldItem.timestamp == newItem.timestamp
 
-        override fun areContentsTheSame(oldItem: HourlyForecast, newItem: HourlyForecast) =
+        override fun areContentsTheSame(oldItem: HourlyForecastUi, newItem: HourlyForecastUi) =
             oldItem == newItem
     }
 
@@ -79,7 +79,7 @@ class HourlyForecastVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val iconImageView: ImageView = itemView.findViewById(R.id.hourly_forecast_icon_imageview)
     val tempTextView: MaterialTextView = itemView.findViewById(R.id.hourly_forecast_temp_textview)
 
-    fun bindData(hourlyForecast: HourlyForecast) {
+    fun bindData(hourlyForecast: HourlyForecastUi) {
 
         hourlyForecast.apply {
             hourTextView.text = hourlyForecast.hour

@@ -1,13 +1,28 @@
 package org.kshchegolev.weatherforecast.data
 
+import org.kshchegolev.weatherforecast.data.mappers.ForecastResponseDtoToDomainMapper
 import org.kshchegolev.weatherforecast.domain.Result
+import org.kshchegolev.weatherforecast.domain.models.Forecast
 import org.kshchegolev.weatherforecast.network.ForecastApi
-import org.kshchegolev.weatherforecast.network.models.ForecastResponse
 import javax.inject.Inject
 
 class ForecastRepositoryImpl @Inject constructor(
-    private val forecastApi: ForecastApi
+    private val forecastApi: ForecastApi,
+    private val forecastResponseDtoToDomainMapper: ForecastResponseDtoToDomainMapper
 ) : ForecastRepository {
 
-    override suspend fun getForecast(): Result<ForecastResponse> = forecastApi.getForecast()
+    override suspend fun getForecast(): Result<Forecast> {
+        val result = forecastApi.getForecast()
+        when (result) {
+            is Result.Success -> {
+                val forecast = forecastResponseDtoToDomainMapper.map(result.data)
+                return Result.Success(forecast)
+            }
+
+            is Result.Failure -> {
+                return Result.Failure(result.message)
+            }
+        }
+    }
 }
+

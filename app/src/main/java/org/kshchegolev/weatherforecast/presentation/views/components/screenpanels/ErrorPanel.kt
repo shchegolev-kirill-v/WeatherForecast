@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.LiveData
 import com.google.android.material.R.style
 import org.kshchegolev.weatherforecast.R
-import org.kshchegolev.weatherforecast.presentation.models.Panel
+import org.kshchegolev.weatherforecast.presentation.enums.Panel
 import org.kshchegolev.weatherforecast.presentation.views.dsl.bind
 import org.kshchegolev.weatherforecast.presentation.views.dsl.button
 import org.kshchegolev.weatherforecast.presentation.views.dsl.dp

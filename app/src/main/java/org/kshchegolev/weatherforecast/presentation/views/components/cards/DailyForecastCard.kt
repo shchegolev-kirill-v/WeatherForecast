@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData
 import coil3.load
 import com.google.android.material.R.style
 import org.kshchegolev.weatherforecast.R
-import org.kshchegolev.weatherforecast.domain.models.DailyForecast
+import org.kshchegolev.weatherforecast.presentation.models.DailyForecastUi
 import org.kshchegolev.weatherforecast.presentation.views.dsl.bind
 import org.kshchegolev.weatherforecast.presentation.views.dsl.cardView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
@@ -21,7 +21,7 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentHeight
 import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentWidth
 
 internal fun ViewGroup.dailyForecastCard(
-    dailyForecast: LiveData<List<DailyForecast>>
+    dailyForecast: LiveData<List<DailyForecastUi>>
 ) =
     cardView {
         matchParentWidth()
@@ -41,7 +41,7 @@ internal fun ViewGroup.dailyForecastCard(
     }
 
 private fun ViewGroup.dailyForecastItem(
-    dailyForecast: DailyForecast
+    dailyForecast: DailyForecastUi
 ) =
     horizontalLayout {
         matchParentWidth()

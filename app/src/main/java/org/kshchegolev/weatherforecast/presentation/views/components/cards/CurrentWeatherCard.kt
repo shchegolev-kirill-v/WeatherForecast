@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData
 import coil3.load
 import com.google.android.material.R.style
 import org.kshchegolev.weatherforecast.R
-import org.kshchegolev.weatherforecast.domain.models.CurrentWeather
+import org.kshchegolev.weatherforecast.presentation.models.CurrentWeatherUi
 import org.kshchegolev.weatherforecast.presentation.views.dsl.bind
 import org.kshchegolev.weatherforecast.presentation.views.dsl.cardView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
@@ -20,7 +20,7 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentHeight
 import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentWidth
 
 internal fun ViewGroup.currentWeatherCard(
-    currentWeather: LiveData<CurrentWeather>,
+    currentWeather: LiveData<CurrentWeatherUi>,
 ) =
     cardView {
         cardElevation = 8f.dp
@@ -37,11 +37,7 @@ internal fun ViewGroup.currentWeatherCard(
             }
             imageView {
                 size(64.dp, 64.dp)
-                bind(currentWeather) { weather ->
-                    if (weather.iconUrl.isNotEmpty()) {
-                        load(weather.iconUrl)
-                    }
-                }
+                bind(currentWeather) { weather -> load(weather.iconUrl) }
             }
             textView {
                 matchParentWidth()

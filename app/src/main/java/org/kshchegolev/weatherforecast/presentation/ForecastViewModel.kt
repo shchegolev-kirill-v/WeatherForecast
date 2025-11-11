@@ -11,23 +11,24 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.kshchegolev.weatherforecast.domain.Result
-import org.kshchegolev.weatherforecast.domain.models.CurrentWeather
-import org.kshchegolev.weatherforecast.domain.models.DailyForecast
-import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
+import org.kshchegolev.weatherforecast.domain.models.Forecast
 import org.kshchegolev.weatherforecast.domain.usecases.GetForecastUseCase
-import org.kshchegolev.weatherforecast.network.models.ForecastResponse
-import org.kshchegolev.weatherforecast.presentation.helpers.Formatters
-import org.kshchegolev.weatherforecast.presentation.helpers.Formatters.convertEpochToLocalTimeFormatted
-import org.kshchegolev.weatherforecast.presentation.helpers.Formatters.toCompleteUrl
-import org.kshchegolev.weatherforecast.presentation.helpers.Formatters.toTemperatureOrDefault
-import org.kshchegolev.weatherforecast.presentation.models.Panel
+import org.kshchegolev.weatherforecast.presentation.enums.Panel
+import org.kshchegolev.weatherforecast.presentation.mappers.ForecastDomainToCurrentWeatherUiMapper
+import org.kshchegolev.weatherforecast.presentation.mappers.ForecastDomainToDailyForecastUiMapper
+import org.kshchegolev.weatherforecast.presentation.mappers.ForecastDomainToHourlyForecastUiMapper
+import org.kshchegolev.weatherforecast.presentation.models.CurrentWeatherUi
+import org.kshchegolev.weatherforecast.presentation.models.DailyForecastUi
+import org.kshchegolev.weatherforecast.presentation.models.HourlyForecastUi
 import org.kshchegolev.weatherforecast.presentation.models.UiState
-import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ForecastViewModel @Inject constructor(
-    private val forecastUseCase: GetForecastUseCase
+    private val forecastUseCase: GetForecastUseCase,
+    private val forecastDomainToCurrentWeatherUiMapper: ForecastDomainToCurrentWeatherUiMapper,
+    private val forecastDomainToHourlyForecastUiMapper: ForecastDomainToHourlyForecastUiMapper,
+    private val forecastDomainToDailyForecastUiMapper: ForecastDomainToDailyForecastUiMapper
 ) : ViewModel() {
 
     private var initialized = false
@@ -38,11 +39,11 @@ internal class ForecastViewModel @Inject constructor(
     val state: LiveData<UiState> = stateMutable
 
     val title: LiveData<String> = state.map { it.title }.distinctUntilChanged()
-    val currentWeather: LiveData<CurrentWeather> =
+    val currentWeather: LiveData<CurrentWeatherUi> =
         state.map { it.currentWeather }.distinctUntilChanged()
-    val dailyForecast: LiveData<List<DailyForecast>> =
+    val dailyForecast: LiveData<List<DailyForecastUi>> =
         state.map { it.dailyForecasts }.distinctUntilChanged()
-    val hourlyForecast: LiveData<List<HourlyForecast>> =
+    val hourlyForecast: LiveData<List<HourlyForecastUi>> =
         state.map { it.hourlyForecasts }.distinctUntilChanged()
     val showPanel: LiveData<Panel> =
         state.map { it.getPanelToShow() }.distinctUntilChanged()
@@ -72,6 +73,7 @@ internal class ForecastViewModel @Inject constructor(
                 is Result.Failure -> {
                     handleErrorResult()
                 }
+
                 is Result.Success -> {
                     handleSuccessResult(result.data)
                 }
@@ -85,36 +87,16 @@ internal class ForecastViewModel @Inject constructor(
         )
     }
 
-    private fun handleSuccessResult(result: ForecastResponse) {
+    private fun handleSuccessResult(forecast: Forecast) {
         stateMutable.value = stateMutable.value?.copy(
             isLoading = false,
             isRefreshing = false,
             isError = false,
             shouldShowErrorSnackBar = false,
-            title = result.location.name,
-            currentWeather = CurrentWeather(
-                temp = result.current.temp.toTemperatureOrDefault(),
-                iconUrl = result.current.condition.iconUrl.toCompleteUrl(),
-                updatedAt = convertEpochToLocalTimeFormatted(Instant.now().epochSecond),
-            ),
-            hourlyForecasts = result.forecast.forecastDays[0].hour.map {
-                HourlyForecast(
-                    hour = convertEpochToLocalTimeFormatted(it.timestamp),
-                    temp = it.temp.toTemperatureOrDefault(),
-                    iconUrl = it.condition.iconUrl.toCompleteUrl(),
-                    timestamp = it.timestamp,
-                )
-            },
-            dailyForecasts = result.forecast.forecastDays.map {
-                DailyForecast(
-                    day = Formatters.convertEpochToLocalDateFormatted(
-                        it.timestamp
-                    ),
-                    tempMax = it.day.maxTemp.toTemperatureOrDefault(),
-                    tempMin = it.day.minTemp.toTemperatureOrDefault(),
-                    iconUrl = it.day.condition.iconUrl.toCompleteUrl()
-                )
-            }
+            title = forecast.locationName ?: "",
+            currentWeather = forecastDomainToCurrentWeatherUiMapper.map(forecast),
+            hourlyForecasts = forecastDomainToHourlyForecastUiMapper.map(forecast),
+            dailyForecasts = forecastDomainToDailyForecastUiMapper.map(forecast)
         )
     }
 

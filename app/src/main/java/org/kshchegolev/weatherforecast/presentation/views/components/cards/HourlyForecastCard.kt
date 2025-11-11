@@ -3,7 +3,7 @@ package org.kshchegolev.weatherforecast.presentation.views.components.cards
 import android.view.ViewGroup
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
-import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
+import org.kshchegolev.weatherforecast.presentation.models.HourlyForecastUi
 import org.kshchegolev.weatherforecast.presentation.HourlyForecastAdapter
 import org.kshchegolev.weatherforecast.presentation.views.dsl.bind
 import org.kshchegolev.weatherforecast.presentation.views.dsl.cardView
@@ -13,7 +13,7 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.recyclerView
 import org.kshchegolev.weatherforecast.presentation.views.dsl.wrapContentHeight
 
 internal fun ViewGroup.hourlyForecastCard(
-    hourlyForecast: LiveData<List<HourlyForecast>>
+    hourlyForecast: LiveData<List<HourlyForecastUi>>
 ) =
     cardView {
         setContentPadding(12.dp, 12.dp, 12.dp, 12.dp)

@@ -3,10 +3,10 @@ package org.kshchegolev.weatherforecast.presentation.views.components.screenpane
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LiveData
-import org.kshchegolev.weatherforecast.domain.models.CurrentWeather
-import org.kshchegolev.weatherforecast.domain.models.DailyForecast
-import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
-import org.kshchegolev.weatherforecast.presentation.models.Panel
+import org.kshchegolev.weatherforecast.presentation.models.CurrentWeatherUi
+import org.kshchegolev.weatherforecast.presentation.models.DailyForecastUi
+import org.kshchegolev.weatherforecast.presentation.models.HourlyForecastUi
+import org.kshchegolev.weatherforecast.presentation.enums.Panel
 import org.kshchegolev.weatherforecast.presentation.views.components.cards.currentWeatherCard
 import org.kshchegolev.weatherforecast.presentation.views.components.cards.dailyForecastCard
 import org.kshchegolev.weatherforecast.presentation.views.components.cards.hourlyForecastCard
@@ -18,9 +18,9 @@ import org.kshchegolev.weatherforecast.presentation.views.dsl.verticalLayout
 
 internal fun ViewGroup.contentPanel(
     showPanel: LiveData<Panel>,
-    currentWeather: LiveData<CurrentWeather>,
-    hourlyForecast: LiveData<List<HourlyForecast>>,
-    dailyForecast: LiveData<List<DailyForecast>>
+    currentWeather: LiveData<CurrentWeatherUi>,
+    hourlyForecast: LiveData<List<HourlyForecastUi>>,
+    dailyForecast: LiveData<List<DailyForecastUi>>
 ) =
     verticalLayout {
         bind(showPanel) {

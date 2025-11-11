@@ -4,7 +4,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LiveData
-import org.kshchegolev.weatherforecast.presentation.models.Panel
+import org.kshchegolev.weatherforecast.presentation.enums.Panel
 import org.kshchegolev.weatherforecast.presentation.views.dsl.bind
 import org.kshchegolev.weatherforecast.presentation.views.dsl.dp
 import org.kshchegolev.weatherforecast.presentation.views.dsl.height

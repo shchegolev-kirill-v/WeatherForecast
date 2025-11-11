@@ -1,8 +1,7 @@
 package org.kshchegolev.weatherforecast.domain.models
 
 data class HourlyForecast(
-    val hour: String,
-    val temp: String,
-    val iconUrl: String,
-    val timestamp: Long
+    val temp: Double?,
+    val iconUrl: String?,
+    val timestamp: Long?
 )

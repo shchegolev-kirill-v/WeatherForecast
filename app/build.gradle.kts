@@ -73,7 +73,7 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
-    implementation("com.squareup.okhttp3:okhttp:5.3.0")
+    implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.coil)

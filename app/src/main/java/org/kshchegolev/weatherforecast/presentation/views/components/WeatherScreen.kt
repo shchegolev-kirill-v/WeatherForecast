@@ -4,10 +4,10 @@ import android.view.ViewGroup
 import androidx.core.view.setPadding
 import androidx.lifecycle.LiveData
 import org.kshchegolev.weatherforecast.R
-import org.kshchegolev.weatherforecast.domain.models.CurrentWeather
-import org.kshchegolev.weatherforecast.domain.models.DailyForecast
-import org.kshchegolev.weatherforecast.domain.models.HourlyForecast
-import org.kshchegolev.weatherforecast.presentation.models.Panel
+import org.kshchegolev.weatherforecast.presentation.models.CurrentWeatherUi
+import org.kshchegolev.weatherforecast.presentation.models.DailyForecastUi
+import org.kshchegolev.weatherforecast.presentation.models.HourlyForecastUi
+import org.kshchegolev.weatherforecast.presentation.enums.Panel
 import org.kshchegolev.weatherforecast.presentation.models.UiState
 import org.kshchegolev.weatherforecast.presentation.views.components.screenpanels.contentPanel
 import org.kshchegolev.weatherforecast.presentation.views.components.screenpanels.errorPanel
@@ -26,9 +26,9 @@ internal fun ViewGroup.weatherScreen(
     state: LiveData<UiState>,
     showPanel: LiveData<Panel>,
     title: LiveData<String>,
-    currentWeather: LiveData<CurrentWeather>,
-    hourlyForecast: LiveData<List<HourlyForecast>>,
-    dailyForecast: LiveData<List<DailyForecast>>,
+    currentWeather: LiveData<CurrentWeatherUi>,
+    hourlyForecast: LiveData<List<HourlyForecastUi>>,
+    dailyForecast: LiveData<List<DailyForecastUi>>,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     onSnackbarShown: () -> Unit

@@ -1,7 +1,7 @@
 package org.kshchegolev.weatherforecast.domain.models
 
 data class CurrentWeather(
-    val temp: String,
-    val iconUrl: String,
-    val updatedAt: String
+    val temp: Double?,
+    val iconUrl: String?,
+    val updatedAt: Long
 )
