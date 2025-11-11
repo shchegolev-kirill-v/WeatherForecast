@@ -11,8 +11,8 @@ class ForecastRepositoryImpl @Inject constructor(
     private val forecastResponseDtoToDomainMapper: ForecastResponseDtoToDomainMapper
 ) : ForecastRepository {
 
-    override suspend fun getForecast(): Result<Forecast> {
-        val result = forecastApi.getForecast()
+    override suspend fun getForecast(location: String, days: Int): Result<Forecast> {
+        val result = forecastApi.getForecast(location= location, days = days)
         when (result) {
             is Result.Success -> {
                 val forecast = forecastResponseDtoToDomainMapper.map(result.data)

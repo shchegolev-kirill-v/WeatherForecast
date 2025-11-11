@@ -9,13 +9,8 @@ interface RetrofitForecastApi {
 
     @GET("forecast.json")
     suspend fun getForecast(
-        @Query("q") location: String = LOCATION,
-        @Query("days") days: Int = DAYS_COUNT,
+        @Query("q") location: String,
+        @Query("days") days: Int,
         @Query("key") apiKey: String = BuildConfig.API_KEY
     ): ForecastResponse
-
-    private companion object {
-        const val DAYS_COUNT = 3
-        const val LOCATION = "55.7569,37.6151"
-    }
 }

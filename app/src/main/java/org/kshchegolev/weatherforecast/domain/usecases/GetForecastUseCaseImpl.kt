@@ -12,8 +12,8 @@ class GetForecastUseCaseImpl @Inject constructor(
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     private val forecastRepository: ForecastRepository
 ) : GetForecastUseCase {
-    override suspend fun getForecast(): Result<Forecast> =
+    override suspend fun getForecast(location: String, days: Int): Result<Forecast> =
         withContext(defaultDispatcher) {
-            forecastRepository.getForecast()
+            forecastRepository.getForecast(location = location, days = days)
         }
 }

@@ -4,5 +4,5 @@ import org.kshchegolev.weatherforecast.domain.Result
 import org.kshchegolev.weatherforecast.network.models.ForecastResponse
 
 interface ForecastApi {
-    suspend fun getForecast(): Result<ForecastResponse>
+    suspend fun getForecast(location: String, days: Int): Result<ForecastResponse>
 }
